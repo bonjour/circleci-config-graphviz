@@ -22,6 +22,11 @@ function findNodes() {
         nodes.push({"name": toSnakeCase(jobName), "label": jobName})
     });
 
+    Object.entries(result.jobs).forEach(job => {
+        const jobName = job[0];
+        nodes.push({"name": toSnakeCase(jobName), "label": jobName})
+    });
+
     return nodes;
 }
 
