@@ -1,23 +1,38 @@
 import fs from 'fs';
 import YAML from 'yaml';
+import yargs from 'yargs';
 
 dump();
 
-
 function dump() {
 
-    let nodes = findNodes();
-    let edges = findEdges();
+    const argv = yargs
+        .usage('Usage $0 <config.js> [Options]')
+        .option('file', {
+            description: 'file to parse',
+            alias: 'f',
+            type: 'string'
+        })
+        .option('workflow', {
+            description: 'name of the workflow to draw',
+            alias: 'w',
+            type: 'string'
+        })
+        .demandOption(['file', 'workflow'])
+        .argv;
+
+    let nodes = findNodes(argv);
+    let edges = findEdges(argv);
 
     console.log(startDot() + addNodes(nodes) + addEdges(edges) + endDot());
 }
 
-function findNodes() {
+function findNodes(argv) {
     let nodes = [];
     
-    const file = fs.readFileSync('./circleci-config.yml', 'utf8');
+    const file = fs.readFileSync(argv.file, 'utf8');
     const result = YAML.parse(file);
-    result.workflows["cd-staging"].jobs.forEach(job => {
+    result.workflows[argv.workflow].jobs.forEach(job => {
         const jobName = Object.entries(job)[0][0];
         nodes.push({"name": toSnakeCase(jobName), "label": jobName})
     });
@@ -25,13 +40,13 @@ function findNodes() {
     return nodes;
 }
 
-function findEdges() {
+function findEdges(argv) {
 
     let edges = [];
     
-    const file = fs.readFileSync('./circleci-config.yml', 'utf8');
+    const file = fs.readFileSync(argv.file, 'utf8');
     const result = YAML.parse(file);
-    result.workflows["cd-staging"].jobs.forEach(job => {
+    result.workflows[argv.workflow].jobs.forEach(job => {
         const jobName = Object.entries(job)[0][0];
         const requires = job[jobName].requires;
 
